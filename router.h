@@ -96,15 +96,15 @@ SC_MODULE(Router)
    int get_down();
    int get_toproc();
 
-   int get_waiting_time(double& receive_time, double& leave_time);/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   int get_waiting_time(double& receive_time, double& leave_time);///////////////////////////////////
    int(*qtable)[4] = new int[NOC_WIDTH * NOC_HEIGHT][4];
-//int qtable[NOC_WIDTH * NOC_HEIGHT][4];////////////////////////////////////////////////////////////////////////////////////////////////////Q表
-   bool updated_latency_flag[port_no];////////////////////////////////////////////////////////////////////////////////////////////////////////////在headflit请求成功后输入端口的Q值更新标志位
-   bool check_if_arrived_dst[port_no];/////////////////////////////////////////////////////////////////确定要更新Q值以后根据是否已经到达终点来决定更新为waiting_time还是Q+waiting_time
-   int updated_latency_dst[port_no];///////////////////////////////////////////////////////////////////////////////////////////////////////////////传递反馈终点的信号
-   double leave_time[port_no];//////////////////////////////////////////////////////////////////////////////////////////////////////////Router's head flit's leave time: When flit find available output port
-   double receive_time[port_no];////////////////////////////////////////////////////////////////////////////////////////////////////////Router's head flit's receive time: When head flit arrives. To calculate waiting time
- //  int vc_computation(flit_type head_flit, int input_port, int output_port, int old_vc);/////////////////////////////////////////////////////////////////////decide which vc to go
+//int qtable[NOC_WIDTH * NOC_HEIGHT][4];///////////////////////////////Q table
+   bool updated_latency_flag[port_no];/////////////////////////////////The update-q-value flag in inport after headflit request successfully
+   bool check_if_arrived_dst[port_no];///////////////////////////////When certain of updating Q value, according to whether it has arrived dst to decide update as 'waiting_time' or 'Q + waiting_time'
+   int updated_latency_dst[port_no];//////////////////////////////////////////////The signal to transmit dst
+   double leave_time[port_no];////////////////////////////////////////////////////Router's head flit's leave time: When flit find available output port
+   double receive_time[port_no];////////////////////////////////////////////////////Router's head flit's receive time: When head flit arrives. To calculate waiting time
+ //  int vc_computation(flit_type head_flit, int input_port, int output_port, int old_vc);/////////////////////////////decide which vc to go
 
    SC_HAS_PROCESS(Router);
    Router(sc_module_name name=sc_gen_unique_name("Router"))
@@ -142,7 +142,7 @@ void Router::initial()
 	for(int i=0;i<port_no;i++)
 		output_vc_reserve.push_back(temp_vc_reserve);
 
-	for (int i = 0; i < NOC_WIDTH * NOC_HEIGHT; i++)/////////////////////////////////////////////////////////////////////////////////////////initial the qtable to zero
+	for (int i = 0; i < NOC_WIDTH * NOC_HEIGHT; i++)//////////////////////////////////////////////////////initial the qtable to zero
 	{
 		for (int j = 0; j < 4; j++)
 		{
@@ -178,7 +178,7 @@ void Router::initial()
 		input_port_state[i]=vc_arbitration;
 		output_port_state[i]=input_arbitration;
 
-		updated_latency_flag[i] = false;/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////初始化Q值标志位为false
+		updated_latency_flag[i] = false;/////////////////////////////////////////////////////////////////////initate Q value flag as false
 		receive_time[i] = 0;/////////////////////////////////////////////////////////////////////////////////
 		leave_time[i] = 0;//////////////////////////////////////////////////////////////////////////////////
 
@@ -278,14 +278,14 @@ void Router::get_in_all_data()//at rising edge of clk, get in data
 			{
 				previous_flit_number[i][vc_id]=input_forward_data[i].data_flit.packet_sequence;
 
-				receive_time[i] = double(sc_time_stamp().to_double() / 1000);/////////////////////////////////////////////////////////////////////////////////////record the head flit's receive time 
-				//leave_time[i] = receive_time[i];//////////////////////////////////////////////////////////////////////////////////leave time for last router is equal to receive time 
-				if (input_forward_data[i].data_flit.vc_choice != vc_id&&i!=TO_PROCESSOR)/////////////////////////////////////////////////////////////////////check if last vc_choice is correct
+				receive_time[i] = double(sc_time_stamp().to_double() / 1000);//////////////////////////////////////////////////////record the head flit's receive time 
+				//leave_time[i] = receive_time[i];//////////////////////////////////////////////////////////////////////////leave time for last router is equal to receive time 
+				if (input_forward_data[i].data_flit.vc_choice != vc_id&&i!=TO_PROCESSOR)////////////////////////////////////////////////check if last vc_choice is correct
 					cout << "vc_choice failed" << " " << input_forward_data[i].data_flit.vc_choice << " " << vc_id <<" "<<i<< endl;
 				input_forward_data[i].data_flit.direction=routing_computation(input_forward_data[i].data_flit);
 				stable_output_direction[i][vc_id]=input_forward_data[i].data_flit.direction;
 				input_forward_data[i].data_flit.routing_delay=routing_algorithm_delay;
-				//input_forward_data[i].data_flit.vc_choice = vc_computation(input_forward_data[i].data_flit, i, input_forward_data[i].data_flit.direction, vc_id);////////////////////////////////////
+				//input_forward_data[i].data_flit.vc_choice = vc_computation(input_forward_data[i].data_flit, i, input_forward_data[i].data_flit.direction, vc_id);/////////////////
 
 				if(false == vc_state[i][vc_id].available_for_new )
 				{
@@ -368,7 +368,7 @@ int Router::routing_computation(flit_type head_flit)
 		return TO_PROCESSOR;
 	}
 	switch (routing_algo) {
-	case 0://////////////////////////////////////////////////////////////////////////////////////////////mesh q-learning minimum path
+	case 0://///////////////////////////////mesh q-learning minimum path
 		if (pos_x != dst_x) {
 			if (pos_x < dst_x) {
 				avil_d.push_back(RIGHT);
@@ -388,7 +388,7 @@ int Router::routing_computation(flit_type head_flit)
 
 		}
 
-		if (avil_d.size() == 2)//////////////////////////////////////////////////////////////to avoid becoming dimension-orderd routing, we use avil[random] instead of avil[0] as a start. In this way, we can avoid choose left right first.
+		if (avil_d.size() == 2)////////////to avoid becoming dimension-orderd routing, we use avil[random] instead of avil[0] as a start. In this way, we can avoid choose left right first.
 		{
 			int d1 = avil_d[0];
 			int d2 = avil_d[1];
@@ -422,7 +422,7 @@ int Router::routing_computation(flit_type head_flit)
 		//}
 		break;
 
-	case 1:///////////////////////////////////////////////////////////////////////////////////////////////////////mesh xy
+	case 1:///////////////////////////////mesh xy dimension-orderd
 		if (pos_x != dst_x) {
 			if (pos_x < dst_x) {
 				d = RIGHT;
@@ -444,7 +444,7 @@ int Router::routing_computation(flit_type head_flit)
 		}
 		break;
 
-	case 2:///////////////////////////////////////////////////////////////////////////////mesh odd-even
+	case 2://////////////////////////////////mesh odd-even
 		if (e_x == 0 && e_y == 0) {
 			return 0;
 		}
@@ -468,14 +468,14 @@ int Router::routing_computation(flit_type head_flit)
 				else
 				{
 					if (dst_x % 2 == 1 || e_x != 1) {
-						avil_d.push_back(1);												//x>0, y!=0, x!=1或dst为奇  RIGHT
+						avil_d.push_back(1);												//x>0, y!=0, x!=1 or dst is odd  RIGHT
 					}
 					if ((pos_x % 2 == 1) || pos_x == src_x) {
 						if (e_y > 0) {
-							avil_d.push_back(2);											//x>0, y>0, pos_x为奇或pos_x为源  UP
+							avil_d.push_back(2);											//x>0, y>0, pos_x is odd or pos_x is src  UP
 						}
 						else {
-							avil_d.push_back(3);											//x>0, y<0, pos_x为奇或pos_x为源  DOWN
+							avil_d.push_back(3);											//x>0, y<0, pos_x为is odd or pos_x is src  DOWN
 						}
 					}
 				}
@@ -484,11 +484,11 @@ int Router::routing_computation(flit_type head_flit)
 				avil_d.push_back(0);														//x<0  LEFT
 				if (pos_x % 2 == 0) {
 					if (e_y > 0) {
-						avil_d.push_back(2);												//x<0, pos_x为偶, y>0  UP
+						avil_d.push_back(2);												//x<0, pos_x is even, y>0  UP
 					}
 					else
 					{
-						avil_d.push_back(3);												//x<0, pos_x为偶, y<=0  DOWN
+						avil_d.push_back(3);												//x<0, pos_x is even, y<=0  DOWN
 					}
 				}
 			}
@@ -496,8 +496,8 @@ int Router::routing_computation(flit_type head_flit)
 		d = avil_d[rand() % avil_d.size()];
 		break;
 
-	case 3://///////////////////////////////////////////////////////////////////////////////////////////mesh west-first
-		if (dst_x == pos_x) {														//先看在同一行则向目标南北走
+	case 3:///////////////////////////////////////mesh west-first
+		if (dst_x == pos_x) {														//First check if it is in the same row, if true then go north or south
 			if (dst_y > pos_y) {
 				d = 2;
 			}
@@ -505,7 +505,7 @@ int Router::routing_computation(flit_type head_flit)
 				d = 3;
 			}
 		}
-		else if (dst_y == pos_y) {												//其次看在同一列则向目标东西走
+		else if (dst_y == pos_y) {												//then check if it is in the same column, if true then go east of west
 			if (dst_x > pos_x) {
 				d = 1;
 			}
@@ -513,16 +513,16 @@ int Router::routing_computation(flit_type head_flit)
 				d = 0;
 			}
 		}
-		else if (dst_x < pos_x) {												//再次若在西侧则向西走
+		else if (dst_x < pos_x) {												//else if dst is in west side then go west
 			d = 0;
 		}
-		else if (dst_y > pos_y) {												//再再次若在北则随机向北或东走
+		else if (dst_y > pos_y) {												//else if dst is in north side then go north or east randomly
 			avil_d.push_back(2);
 			avil_d.push_back(1);
 
 			d = avil_d[rand() % avil_d.size()];
 		}
-		else {																			//在南则向南或东走
+		else {																			//else if dst is in south side then go south or east randomly
 			avil_d.push_back(1);
 			avil_d.push_back(3);
 
@@ -530,7 +530,7 @@ int Router::routing_computation(flit_type head_flit)
 		}
 		break;
 
-	case 4://////////////////////////////////////////////////////////////////////////////////mesh negative first
+	case 4://////////////////////////////////////////mesh negative first
 		if (dst_x == pos_x) {
 			if (dst_y > pos_y) {
 				d = 2;
@@ -567,7 +567,7 @@ int Router::routing_computation(flit_type head_flit)
 
 		break;
 
-	case 5:///////////////////////////////////////////////////////////////////////////////mesh odd-even with q learning
+	case 5://///////////////////////////////////mesh odd-even with q learning
 		if (e_x == 0 && e_y == 0) {
 			return 0;
 		}
@@ -591,14 +591,14 @@ int Router::routing_computation(flit_type head_flit)
 				else
 				{
 					if (dst_x % 2 == 1 || e_x != 1) {
-						avil_d.push_back(1);												//x>0, y!=0, x!=1或dst为奇  RIGHT
+						avil_d.push_back(1);												//x>0, y!=0, x!=1 or dst is odd  RIGHT
 					}
 					if ((pos_x % 2 == 1) || pos_x == src_x) {
 						if (e_y > 0) {
-							avil_d.push_back(2);											//x>0, y>0, pos_x为奇或pos_x为源  UP
+							avil_d.push_back(2);											//x>0, y>0, pos_x is odd or pos_x is src  UP
 						}
 						else {
-							avil_d.push_back(3);											//x>0, y<0, pos_x为奇或pos_x为源  DOWN
+							avil_d.push_back(3);											//x>0, y<0, pos_x is odd or pos_x is src  DOWN
 						}
 					}
 				}
@@ -607,11 +607,11 @@ int Router::routing_computation(flit_type head_flit)
 				avil_d.push_back(0);														//x<0  LEFT
 				if (pos_x % 2 == 0) {
 					if (e_y > 0) {
-						avil_d.push_back(2);												//x<0, pos_x为偶, y>0  UP
+						avil_d.push_back(2);												//x<0, pos_xis even, y>0  UP
 					}
 					else
 					{
-						avil_d.push_back(3);												//x<0, pos_x为偶, y<=0  DOWN
+						avil_d.push_back(3);												//x<0, pos_x is even, y<=0  DOWN
 					}
 				}
 			}
@@ -628,7 +628,7 @@ int Router::routing_computation(flit_type head_flit)
 		}
 		break;
 
-	case 6:///////////////////////////////////////////////////////////////////////random minimum path
+	case 6://///////////////////////////////////////random minimum path
 		if (pos_x != dst_x) {
 			if (pos_x < dst_x) {
 				avil_d.push_back(RIGHT);
@@ -758,15 +758,15 @@ void Router::input_port()
 		{
 			if (input_id != TO_PROCESSOR)
 			{
-				if (output_backward_data[input_id].updated_latency_flag == true)//////////////////////////////////////////////////////////////////////////////////////////////////////////检测到更新信号则更新Q表
+				if (output_backward_data[input_id].updated_latency_flag == true)///////////////////////////////////////If updating signal is detected then update Q table
 				{
 					int temp_updated = 0.5 * output_backward_data[input_id].updated_latency + 0.5 * qtable[output_backward_data[input_id].updated_latency_dst][input_id];
 					if (temp_updated >= 65535)
 						qtable[output_backward_data[input_id].updated_latency_dst][input_id] = 65535;
 					else
 						qtable[output_backward_data[input_id].updated_latency_dst][input_id] = temp_updated;
-					//qtable[output_backward_data[input_id].updated_latency_dst][input_id] = (int)0.5 * output_backward_data[input_id].updated_latency + 0.5 * qtable[output_backward_data[input_id].updated_latency_dst][input_id];/////////////////////////////////////////////////////////更新Q表
-					output_backward_data[input_id].updated_latency_flag = false;//////////////////////////////////////////////////////////////////////////////////////////////////////////更新Q表以后将标志位复位
+					//qtable[output_backward_data[input_id].updated_latency_dst][input_id] = (int)0.5 * output_backward_data[input_id].updated_latency + 0.5 * qtable[output_backward_data[input_id].updated_latency_dst][input_id];//Update Q table
+					output_backward_data[input_id].updated_latency_flag = false;/////////////////////////////////////After updating Q table, reset flag
 				}
 			}
 			
@@ -824,7 +824,7 @@ void Router::input_port()
 							if(true == buffer[input_id][vc_id][read_pointer.at(input_id).at(vc_id)].head )
 							{
 								vc_state[input_id][vc_id].output_port_direction=buffer[input_id][vc_id][read_pointer.at(input_id).at(vc_id)].direction;
-								//receive_time[input_id] = double(sc_time_stamp().to_double() / 1000);/////////////////////////////////////////////////////////////////////////////////////record the head flit's receive time 
+								//receive_time[input_id] = double(sc_time_stamp().to_double() / 1000);////////////////////////////////////////////record the head flit's receive time 
 							}
 
 							current_output_direction.at(input_id)=vc_state[input_id][vc_id].output_port_direction;
@@ -883,7 +883,7 @@ void Router::input_port()
 						//if it is a head flit, find available vc 
 						if (true == to_send_flit.head)
 						{
-							if (current_output_direction.at(input_id) == TO_PROCESSOR)//////////////////////////////////////////////////////////////at last step, when arrive at processor, use any available vc rather than vc choice
+							if (current_output_direction.at(input_id) == TO_PROCESSOR)//////////////////at last step, when arrive at processor, use any available vc rather than vc choice
 							{
 								int temp_next_vc = output_backward_data[current_output_direction.at(input_id)].available_vc;
 								if (-1 == temp_next_vc || true == output_backward_data[current_output_direction.at(input_id)].buffer_full[temp_next_vc])
@@ -908,12 +908,12 @@ void Router::input_port()
 									stable_output_next_vc[input_id][current_vc] = temp_next_vc;
 									if (input_id != TO_PROCESSOR)
 									{
-										leave_time[input_id] = double(sc_time_stamp().to_double() / 1000);////////////////////////////////////////////////////////////////////record the leave time when head flit finds its output port vc
-										updated_latency_flag[input_id] = true;////////////////////////////////////////////////////////////////////////////////头flit找到了对应的通道且可用，更新Q包的标志位更新，疑问：什么时候解除置位
-										updated_latency_dst[input_id] = to_send_flit.dest;///////////////////////////////////////////////////////////////////////////////////////////找到终点
+										leave_time[input_id] = double(sc_time_stamp().to_double() / 1000);///////////////////record the leave time when head flit finds its output port vc
+										updated_latency_flag[input_id] = true;/////////////////////Head flit has found corresponding channel and it is available, update flag of Q pacekt
+										updated_latency_dst[input_id] = to_send_flit.dest;///////////////////////Found dest
 										if (to_send_flit.direction == TO_PROCESSOR)
 										{
-											check_if_arrived_dst[input_id] = true;////////////////////////////////////////////////////////////////////////////////////////////////用来判断怎么更新Q包
+											check_if_arrived_dst[input_id] = true;///////////////////////////To judge how to update Q packet
 										}
 										else
 										{
@@ -923,8 +923,8 @@ void Router::input_port()
 
 								}
 							}
-							else {/////////////////////////////////////////////////////////////////////////////////next node is not processor, follow the vc choice to avoid deadlock
-								//if (output_backward_data[current_output_direction.at(input_id)].available_vc == to_send_flit.vc_choice)//////////////////////////////////if available_vc is exactly the deadlock-free vc, we choose it
+							else {//////////////////////////////////next node is not processor, follow the vc choice to avoid deadlock
+								//if (output_backward_data[current_output_direction.at(input_id)].available_vc == to_send_flit.vc_choice)//////if available_vc is exactly the deadlock-free vc, we choose it
 								//{
 								//	int temp_next_vc = output_backward_data[current_output_direction.at(input_id)].available_vc;
 								int temp_num_available_vc = output_backward_data[current_output_direction.at(input_id)].num_available_vc;
@@ -934,13 +934,13 @@ void Router::input_port()
 								else if (temp_num_available_vc == 2)
 									temp_next_vc = to_send_flit.vc_choice;
 
-								if (temp_next_vc != to_send_flit.vc_choice)//////////////////////////////////////////////////////////////////////////////if next vc is not vc_choice, error!!
+								if (temp_next_vc != to_send_flit.vc_choice)////////////////////////////////////if next vc is not vc_choice, error!!
 								{
 									cout << "error!!vc choice is not good!!" << endl;
 									input_port_state[input_id] = vc_arbitration;
 									break;
 								}
-								//int temp_next_vc = to_send_flit.vc_choice;///////////////////////////////////////////////////////////////////////////////////////
+								//int temp_next_vc = to_send_flit.vc_choice;////////////////////////////////
 
 								//no available vc or the available vc's buffer is full
 								else
@@ -966,12 +966,12 @@ void Router::input_port()
 										stable_output_next_vc[input_id][current_vc] = temp_next_vc;
 										if (input_id != TO_PROCESSOR)
 										{
-											leave_time[input_id] = double(sc_time_stamp().to_double() / 1000);////////////////////////////////////////////////////////////////////record the leave time when head flit finds its output port vc
-											updated_latency_flag[input_id] = true;////////////////////////////////////////////////////////////////////////////////头flit找到了对应的通道且可用，更新Q包的标志位更新，疑问：什么时候解除置位
-											updated_latency_dst[input_id] = to_send_flit.dest;///////////////////////////////////////////////////////////////////////////////////////////找到终点
+											leave_time[input_id] = double(sc_time_stamp().to_double() / 1000);/////////////////////record the leave time when head flit finds its output port vc
+											updated_latency_flag[input_id] = true;/////////////////////////////Head flit has found corresponding channel and it is available, update flag of Q pacekt
+											updated_latency_dst[input_id] = to_send_flit.dest;////////////////////////////////Found dest
 											if (to_send_flit.direction == TO_PROCESSOR)
 											{
-												check_if_arrived_dst[input_id] = true;////////////////////////////////////////////////////////////////////////////////////////////////用来判断怎么更新Q包
+												check_if_arrived_dst[input_id] = true;/////////////////////////To judge how to update Q packet
 											}
 											else
 											{
@@ -1126,12 +1126,12 @@ void Router::input_port()
 							else if (temp_num_available_vc == 2)
 								temp_next_vc = to_send_flit.vc_choice;
 							//int temp_next_vc = output_backward_data[  current_output_direction.at(input_id)  ].available_vc;
-							if (temp_next_vc != to_send_flit.vc_choice)////////////////////////////////////////////////////////////////if next vc is not vc_choice, error!!
+							if (temp_next_vc != to_send_flit.vc_choice)////////////////////////////if next vc is not vc_choice, error!!
 							{
 								cout << "error!!vc choice is not good!! in sending data" << endl;
 								input_port_state[input_id] = vc_arbitration;
 							}
-							//int temp_next_vc = to_send_flit.vc_choice;/////////////////////////////////////////////////////////////////////////////////////
+							//int temp_next_vc = to_send_flit.vc_choice;////////////////////////////
 
 							//no available vc or the available vc's buffer is full
 							else
@@ -1261,11 +1261,11 @@ void Router::backward_of_input_port()
 			{
 				if (updated_latency_flag[input_id] == true)
 				{
-					temp_input_backward_data.updated_latency_flag = true;////////////////////////此处的input_id即拥有head flit且确定能发送的输入端口。将他的反馈信息flag置1，使上一个可以判断这个端口有新Q包
-					temp_input_backward_data.updated_latency_dst = updated_latency_dst[input_id];///////////////////////////////////////////////////////更新终点
-					if (check_if_arrived_dst[input_id] == true)/////////////////////////////////////////////////////////////////////////////////////////////////////////根据是否抵达终点判断如何更新Q	值
+					temp_input_backward_data.updated_latency_flag = true;//////The input_id here is the input port that owns head flit and is certain to be able to  send flit. Set its backward flag 1 to let last router know this port has new Q packet
+					temp_input_backward_data.updated_latency_dst = updated_latency_dst[input_id];//////////////////////////Update dst
+					if (check_if_arrived_dst[input_id] == true)/////////////////////////////Update Q value according to whether it has arrived dst.
 					{
-						temp_input_backward_data.updated_latency = get_waiting_time(receive_time[input_id], leave_time[input_id]);//////////////////////////////////////////////////////////////////////////////写入包的Q值=waiting_time
+						temp_input_backward_data.updated_latency = get_waiting_time(receive_time[input_id], leave_time[input_id]);/////////////////////////Q value writing to packet = waiting_time
 					}
 					else
 					{
@@ -1273,7 +1273,7 @@ void Router::backward_of_input_port()
 						if (temp_latency >= 65535)
 							temp_input_backward_data.updated_latency = 65535;
 						else
-						temp_input_backward_data.updated_latency = temp_latency;///////////////////////////////////////////////////////写入包的Q值=waiting_time+下一步的Q值
+						temp_input_backward_data.updated_latency = temp_latency;///////////////////////Q value writing to packet = waiting_time + Q value in next step
 					}
 				}
 				/*if (temp_input_backward_data.updated_latency != 0) 
@@ -1329,7 +1329,7 @@ void Router::backward_of_input_port()
 			temp_input_backward_data.available_vc = -1;
 			temp_input_backward_data.available_vc1 = -1;
 			int temp_num_available_vc = 0;
-			//check the number of available vc/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//check the number of available vc///////////////////////////////
 			if ((true == vc_state[input_id][0].available_for_new) && (true == vc_state[input_id][1].available_for_new))
 				temp_num_available_vc = 2;
 			else if ((true == vc_state[input_id][0].available_for_new) || (true == vc_state[input_id][1].available_for_new))
@@ -1415,21 +1415,21 @@ void Router::output_port()
 									continue;
 
 								}
-								else if (0 > available_vc) //maybe the receiver do not want new packet to come///////////////////////////////////////////
+								else if (0 > available_vc) //maybe the receiver do not want new packet to come///////////////////////////
 								{
 									request_fail[output_id][input_id] = true;
 									continue;
 								}
 								//this branch may taken when VC0 is occupied but VC 1 is not
 								//However, the receiver may say VC0 is available because of the delay on link
-								else if (-1 != output_vc_reserve.at(output_id).at(available_vc))///////////////////////////////////////////////
+								else if (-1 != output_vc_reserve.at(output_id).at(available_vc))//////////////////////////////
 								{
 									request_fail[output_id][input_id] = true;
 									continue;
 								}
 								else
 								{// check whether this vc is full
-									if (false == output_backward_data[output_id].buffer_full[available_vc])//////////////////////////////////
+									if (false == output_backward_data[output_id].buffer_full[available_vc])/////////////////////////
 									{
 										request_success[output_id][input_id] = true;
 										//cout<<sc_simulation_time()<<"output id="<<output_id<<"output port arbitrating request from input_port="<<input_id<<"Successed for head"<<endl;
@@ -1449,7 +1449,7 @@ void Router::output_port()
 							}
 							else {
 								int available_vc = output_backward_data[output_id].available_vc;
-								int temp_num_available_vc = output_backward_data[output_id].num_available_vc;///////////////////////////////////////////////////////////////////
+								int temp_num_available_vc = output_backward_data[output_id].num_available_vc;///////////////////////////////
 								if (temp_num_available_vc == 0)
 								{
 									request_fail[output_id][input_id] = true;
@@ -1468,21 +1468,21 @@ void Router::output_port()
 										continue;
 
 									}
-									else if (0 > available_vc) //maybe the receiver do not want new packet to come///////////////////////////////////////////
+									else if (0 > available_vc) //maybe the receiver do not want new packet to come///////////////////////////
 									{
 										request_fail[output_id][input_id] = true;
 										continue;
 									}
 									//this branch may taken when VC0 is occupied but VC 1 is not
 									//However, the receiver may say VC0 is available because of the delay on link
-									else if (-1 != output_vc_reserve.at(output_id).at(available_vc))///////////////////////////////////////////////
+									else if (-1 != output_vc_reserve.at(output_id).at(available_vc))///////////////////////////////
 									{
 										request_fail[output_id][input_id] = true;
 										continue;
 									}
 									else
 									{// check whether this vc is full
-										if (false == output_backward_data[output_id].buffer_full[available_vc])//////////////////////////////////
+										if (false == output_backward_data[output_id].buffer_full[available_vc])////////////////////////
 										{
 											request_success[output_id][input_id] = true;
 											//cout<<sc_simulation_time()<<"output id="<<output_id<<"output port arbitrating request from input_port="<<input_id<<"Successed for head"<<endl;
@@ -1500,9 +1500,9 @@ void Router::output_port()
 										}
 									}
 								}
-								//if (available_vc != temp_data.vc_choice)///////////////////////////////////////////////////////////first we check if it is vc_choice
+								//if (available_vc != temp_data.vc_choice)/////////////////////////first we check if it is vc_choice
 								//{
-								//	request_fail[output_id][input_id] = true;///////////////////////////////////////////////////////////////////////////not vc_choice, fail
+								//	request_fail[output_id][input_id] = true;///////////////////////not vc_choice, fail
 								//	continue;
 								//}
 									//no available vc
@@ -1515,7 +1515,7 @@ void Router::output_port()
 										continue;
 
 									}
-									//else if ((0 > available_vc) && (0 > available_vc1)) //maybe the receiver do not want new packet to come///////////////////////////////////////////
+									//else if ((0 > available_vc) && (0 > available_vc1)) //maybe the receiver do not want new packet to come//////////////////
 									//{
 									//	//cout<<sc_simulation_time()<<"output id="<<output_id<<"output port arbitrating request from input_port="<<input_id<<"failed for no VC"<<endl;
 
@@ -1526,7 +1526,7 @@ void Router::output_port()
 									//}
 									//this branch may taken when VC0 is occupied but VC 1 is not
 									//However, the receiver may say VC0 is available because of the delay on link
-									else if (-1 != output_vc_reserve.at(output_id).at(temp_vc_choice)) ///////////////////////////////////////////////
+									else if (-1 != output_vc_reserve.at(output_id).at(temp_vc_choice)) ////////////////////
 									{
 										request_fail[output_id][input_id] = true;
 
@@ -1535,7 +1535,7 @@ void Router::output_port()
 									}
 									else
 									{// check whether this vc is full
-										if (false == output_backward_data[output_id].buffer_full[temp_vc_choice]) //////////////////////////////////
+										if (false == output_backward_data[output_id].buffer_full[temp_vc_choice]) ////////////////////
 										{
 											//grant input port
 											/*if(available_vc!= temp_data.vc_choice)
@@ -1615,7 +1615,7 @@ void Router::output_port()
 		wait();
 	}
 }
-int Router::get_waiting_time(double& receive_time, double& leave_time)/////////////////////////////////////////////////////////calculate the local waiting time
+int Router::get_waiting_time(double& receive_time, double& leave_time)////////////////////calculate the local waiting time
 {
 	double waiting_time = leave_time - receive_time;
 	if (waiting_time <= 3 * AMS)
@@ -1630,7 +1630,7 @@ int Router::get_waiting_time(double& receive_time, double& leave_time)//////////
 	leave_time = 0;
 }
 
-//int Router::vc_computation(flit_type head_flit, int input_port, int output_port, int old_vc)///////////////////////////////////////////////////////
+//int Router::vc_computation(flit_type head_flit, int input_port, int output_port, int old_vc)//////////////////////
 //{
 	//version 1: ChaoSheng: left right has 1 vc, up down has 2 vc
 	/*int vc_choice = -1;
