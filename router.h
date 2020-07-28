@@ -906,20 +906,20 @@ void Router::input_port()
 									vc_state[input_id][current_vc].next_vc_id = temp_next_vc;
 									current_next_vc = temp_next_vc;
 									stable_output_next_vc[input_id][current_vc] = temp_next_vc;
-									if (input_id != TO_PROCESSOR)
-									{
+									// if (input_id != TO_PROCESSOR)
+									// {
 										leave_time[input_id] = double(sc_time_stamp().to_double() / 1000);///////////////////record the leave time when head flit finds its output port vc
 										updated_latency_flag[input_id] = true;/////////////////////Head flit has found corresponding channel and it is available, update flag of Q pacekt
 										updated_latency_dst[input_id] = to_send_flit.dest;///////////////////////Found dest
-										if (to_send_flit.direction == TO_PROCESSOR)
-										{
+										// if (to_send_flit.direction == TO_PROCESSOR)
+										// {
 											check_if_arrived_dst[input_id] = true;///////////////////////////To judge how to update Q packet
-										}
-										else
-										{
-											check_if_arrived_dst[input_id] = false;
-										}
-									}
+										// }
+										// else
+										// {
+										// 	check_if_arrived_dst[input_id] = false;
+										// }
+									// }
 
 								}
 							}
@@ -940,7 +940,6 @@ void Router::input_port()
 									input_port_state[input_id] = vc_arbitration;
 									break;
 								}
-								//int temp_next_vc = to_send_flit.vc_choice;////////////////////////////////
 
 								//no available vc or the available vc's buffer is full
 								else
@@ -969,14 +968,14 @@ void Router::input_port()
 											leave_time[input_id] = double(sc_time_stamp().to_double() / 1000);/////////////////////record the leave time when head flit finds its output port vc
 											updated_latency_flag[input_id] = true;/////////////////////////////Head flit has found corresponding channel and it is available, update flag of Q pacekt
 											updated_latency_dst[input_id] = to_send_flit.dest;////////////////////////////////Found dest
-											if (to_send_flit.direction == TO_PROCESSOR)
-											{
-												check_if_arrived_dst[input_id] = true;/////////////////////////To judge how to update Q packet
-											}
-											else
-											{
+											// if (to_send_flit.direction == TO_PROCESSOR)
+											// {
+											// 	check_if_arrived_dst[input_id] = true;/////////////////////////To judge how to update Q packet
+											// }
+											// else
+											// {
 												check_if_arrived_dst[input_id] = false;
-											}
+											// }
 										}
 
 									}
@@ -1617,7 +1616,9 @@ void Router::output_port()
 }
 int Router::get_waiting_time(double& receive_time, double& leave_time)////////////////////calculate the local waiting time
 {
+	
 	double waiting_time = leave_time - receive_time;
+	printf("waiting_time is %f\n", waiting_time);
 	if (waiting_time <= 3 * AMS)
 		return 0;
 	else if (waiting_time <= 9 * AMS)
